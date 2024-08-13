@@ -23,6 +23,7 @@ services:
       - DEV_PLATFORM=DOCKER
       - NODE_ENV=${NODE_ENV}
       - MONGODB_URI=${MONGODB_URI}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
     volumes:
       - ./src:/app/src
       - node-modules:/app/node_modules
