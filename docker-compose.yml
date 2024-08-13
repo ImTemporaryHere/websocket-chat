@@ -7,12 +7,12 @@ services:
     image: mongo
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/data/db
     ports:
-      - "27017:27017"
+      - "${DB_PORT}:27017"
 
 
   backend:
@@ -22,6 +22,7 @@ services:
     environment:
       - DEV_PLATFORM=DOCKER
       - NODE_ENV=${NODE_ENV}
+      - MONGODB_URI=${MONGODB_URI}
     volumes:
       - ./src:/app/src
       - node-modules:/app/node_modules
