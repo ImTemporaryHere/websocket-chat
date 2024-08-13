@@ -1,0 +1,36 @@
+# Use root/example as user/password credentials
+version: '3.9'
+
+services:
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - db_data:/data/db
+    ports:
+      - "27017:27017"
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DEV_PLATFORM=DOCKER
+      - NODE_ENV=${NODE_ENV}
+    volumes:
+      - ./src:/app/src
+      - node-modules:/app/node_modules
+    command: npm run ${NPM_COMMAND}
+    ports:
+      - "${APP_PORT}:3000"
+
+
+
+volumes:
+  db_data:
+  node-modules:
