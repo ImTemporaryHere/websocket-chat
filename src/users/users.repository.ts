@@ -11,4 +11,8 @@ export class UsersRepository {
   static find() {
     return this.userModel.find().exec();
   }
+
+  static findOne(params: Partial<User>) {
+    return this.userModel.findOne(params).exec();
+  }
 }

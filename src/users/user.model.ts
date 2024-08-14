@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
 
-export  type User = {
-  name: string,
-  password: string,
+export class User {
+  constructor(
+    public email: string,
+    public password: string,
+  ) {}
 }
 
-
 const userSchema = new mongoose.Schema<User>({
-  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
 });
 
-export const UserModel = mongoose.model('user', userSchema);
+export const UserModel = mongoose.model("user", userSchema);

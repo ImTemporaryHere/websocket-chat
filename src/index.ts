@@ -1,11 +1,20 @@
 // src/index.js
 import express, { Express, Request, Response } from "express";
-import mongoose from 'mongoose'
-import {usersRouter} from "./users/users.router";
+import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import { routers } from "./routers";
+import { errorMiddleware } from "./middlewares/error-middleware";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+// Middleware to parse JSON requests
+app.use(express.json());
+app.use(cookieParser());
+app.use(cors());
+app.use("/api", routers);
+app.use(errorMiddleware);
 
 // MongoDB Connection URI
 const mongoURI = process.env.MONGODB_URI as string;
@@ -14,25 +23,14 @@ const mongoURI = process.env.MONGODB_URI as string;
 mongoose.connect(mongoURI);
 
 // Connection Events
-mongoose.connection.on('connected', () => {
-  console.log('Connected to MongoDB');
-
-
-  // Middleware to parse JSON requests
-  app.use(express.json());
-
-  app.use('/users',usersRouter)
-
-
+mongoose.connection.on("connected", () => {
+  console.log("Connected to MongoDB");
 
   app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
-
 });
 
-mongoose.connection.on('error', (err:any) => {
-  console.error('Failed to connect to MongoDB', err);
+mongoose.connection.on("error", (err: any) => {
+  console.error("Failed to connect to MongoDB", err);
 });
-
-
