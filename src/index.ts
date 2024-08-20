@@ -5,10 +5,13 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { routers } from "./routers";
 import { errorMiddleware } from "./middlewares/error-middleware";
+import { createServer } from "http";
+import { setupIoServer } from "./sockets";
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
-
+const expressServer = createServer(app);
+setupIoServer(expressServer);
 // Middleware to parse JSON requests
 app.use(express.json());
 app.use(cookieParser());
@@ -26,7 +29,7 @@ mongoose.connect(mongoURI);
 mongoose.connection.on("connected", () => {
   console.log("Connected to MongoDB");
 
-  app.listen(port, () => {
+  expressServer.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
 });

@@ -21,7 +21,7 @@ export class AuthService {
       payload,
       process.env.JWT_ACCESS_SECRET as string,
       {
-        expiresIn: "30m",
+        expiresIn: "8h",
       },
     );
 
