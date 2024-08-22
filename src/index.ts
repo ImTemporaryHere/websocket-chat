@@ -6,12 +6,19 @@ import cors from "cors";
 import { routers } from "./routers";
 import { errorMiddleware } from "./middlewares/error-middleware";
 import { createServer } from "http";
-import { setupIoServer } from "./sockets";
+import { container } from "./container";
+import { UsersService } from "./users/users.service";
+import { UsersRepository } from "./users/users.repository";
+import { AuthService } from "./users/auth.service";
+
+container.register(UsersRepository, []);
+container.register(AuthService, []);
+container.register(UsersService, [AuthService, UsersRepository]);
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 const expressServer = createServer(app);
-setupIoServer(expressServer);
+
 // Middleware to parse JSON requests
 app.use(express.json());
 app.use(cookieParser());

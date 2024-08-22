@@ -8,15 +8,15 @@ export type TokenPayload = {
 };
 
 export class AuthService {
-  static hashPassword(password: string) {
+  hashPassword(password: string) {
     return bcrypt.hash(password, saltRounds);
   }
 
-  static verifyPassword(password: string, hash: string): Promise<boolean> {
+  verifyPassword(password: string, hash: string): Promise<boolean> {
     return bcrypt.compare(password, hash);
   }
 
-  static generateTokens(payload: TokenPayload) {
+  generateTokens(payload: TokenPayload) {
     const accessToken = jwt.sign(
       payload,
       process.env.JWT_ACCESS_SECRET as string,
@@ -36,11 +36,11 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  static verifyAccessToken(token: string) {
+  verifyAccessToken(token: string) {
     return jwt.verify(token, process.env.JWT_ACCESS_SECRET as string);
   }
 
-  static verifyRefreshToken(token: string) {
+  verifyRefreshToken(token: string) {
     return jwt.verify(token, process.env.JWT_ACCESS_SECRET as string);
   }
 }

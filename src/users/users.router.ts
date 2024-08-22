@@ -1,7 +1,8 @@
 import express, { Router } from "express";
-import { UsersController } from "./users.controller";
+import { createUser, getUsers, login } from "./users.controller";
 import { authMiddleware } from "../middlewares/auth-middleware";
 import { body } from "express-validator";
+import { container } from "../container";
 
 export const usersRouter = express.Router({ mergeParams: true });
 
@@ -10,12 +11,12 @@ usersRouter
     "/users",
     body("email").isEmail(),
     body("password").isLength({ min: 3, max: 20 }),
-    UsersController.createUser,
+    createUser,
   )
-  .get("/users", authMiddleware, UsersController.getUsers)
+  .get("/users", authMiddleware, getUsers)
   .post(
     "/login",
     body("email").isEmail(),
     body("password").isLength({ min: 3, max: 20 }),
-    UsersController.login,
+    login,
   );

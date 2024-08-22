@@ -4,19 +4,24 @@ import { AuthService } from "./auth.service";
 import { ApiException } from "../exeptions/api-exception";
 
 export class UsersService {
-  static async registerUser(user: User): Promise<{
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersRepository: UsersRepository,
+  ) {}
+
+  async registerUser(user: User): Promise<{
     accessToken: string;
     userId: string;
     refreshToken: string;
   }> {
-    const hashedPassword = await AuthService.hashPassword(user.password);
+    const hashedPassword = await this.authService.hashPassword(user.password);
 
-    const createdUser = await UsersRepository.create({
+    const createdUser = await this.usersRepository.create({
       ...user,
       password: hashedPassword,
     });
 
-    const { accessToken, refreshToken } = AuthService.generateTokens({
+    const { accessToken, refreshToken } = this.authService.generateTokens({
       userId: createdUser._id.toString(),
     });
 
@@ -27,8 +32,8 @@ export class UsersService {
     };
   }
 
-  static async login(userData: User) {
-    const existingUser = await UsersRepository.findOne({
+  async login(userData: User) {
+    const existingUser = await this.usersRepository.findOne({
       email: userData.email,
     });
 
@@ -36,7 +41,7 @@ export class UsersService {
       throw ApiException.badRequestError("no existingUser with this email");
     }
 
-    const checkPassword = AuthService.verifyPassword(
+    const checkPassword = this.authService.verifyPassword(
       userData.password,
       existingUser.password,
     );
@@ -45,7 +50,7 @@ export class UsersService {
       throw ApiException.badRequestError("not correct password");
     }
 
-    const { accessToken, refreshToken } = AuthService.generateTokens({
+    const { accessToken, refreshToken } = this.authService.generateTokens({
       userId: existingUser._id.toString(),
     });
 
@@ -56,7 +61,7 @@ export class UsersService {
     };
   }
 
-  static getUsers() {
-    return UsersRepository.find();
+  getUsers() {
+    return this.usersRepository.find();
   }
 }
