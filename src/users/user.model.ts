@@ -1,10 +1,8 @@
 import mongoose from "mongoose";
 
-export class User {
-  constructor(
-    public email: string,
-    public password: string,
-  ) {}
+export interface User {
+  email: string;
+  password: string;
 }
 
 const userSchema = new mongoose.Schema<User>({

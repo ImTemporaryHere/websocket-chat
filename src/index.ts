@@ -10,14 +10,26 @@ import { container } from "./container";
 import { UsersService } from "./users/users.service";
 import { UsersRepository } from "./users/users.repository";
 import { AuthService } from "./users/auth.service";
+import { SocketIoTransport } from "./transports/socketio.transport";
+import { GroupsEventHandler } from "./groups/groups-event-handler";
+import { GroupsService } from "./groups/groups.service";
+import { GroupsRepository } from "./groups/groups.repository";
 
 container.register(UsersRepository, []);
 container.register(AuthService, []);
 container.register(UsersService, [AuthService, UsersRepository]);
 
+container.register(GroupsRepository, []);
+container.register(GroupsService, [GroupsRepository]);
+container.register(GroupsEventHandler, [GroupsService]);
+container.register(SocketIoTransport, [GroupsEventHandler]);
+
 const app: Express = express();
 const port = process.env.PORT || 3000;
 const expressServer = createServer(app);
+container
+  .get<SocketIoTransport>(SocketIoTransport.name)
+  .setupServer(expressServer);
 
 // Middleware to parse JSON requests
 app.use(express.json());
