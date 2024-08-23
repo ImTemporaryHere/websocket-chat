@@ -1,31 +1,36 @@
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = {}> = new (...args: any) => any;
 
 class Container {
   services: Record<
     string,
-    { constructor: Constructor; dependencies: string[]; instance: null | {} }
+    {
+      constructor: Constructor;
+      dependencies: Constructor[];
+      instance: null | InstanceType<Constructor>;
+    }
   > = {};
 
   register(constructor: Constructor, dependencies: Constructor[]) {
     this.services[constructor.name] = {
       constructor,
-      dependencies: dependencies.map((d) => d.name),
+      dependencies,
       instance: null,
     };
   }
 
-  get<T = Constructor>(serviceName: string): T {
-    const service = this.services[serviceName];
-    if (!service) {
+  get<T extends Constructor>(service: T): InstanceType<T> {
+    const serviceName = service.name;
+    const existingService = this.services[serviceName];
+    if (!existingService) {
       throw new Error(`Service ${serviceName} not found in Container`);
     }
 
-    if (service.instance) {
-      return service.instance as T;
+    if (existingService.instance) {
+      return existingService.instance;
     }
     const { constructor, dependencies } = this.services[serviceName];
     const instance = new constructor(...dependencies.map((dp) => this.get(dp)));
-    return instance as T;
+    return instance;
   }
 }
 

@@ -21,9 +21,7 @@ export const authMiddleware = (
       return next(ApiException.unauthorizedError());
     }
 
-    const userData = container
-      .get<AuthService>(AuthService.name)
-      .verifyAccessToken(accessToken);
+    const userData = container.get(AuthService).verifyAccessToken(accessToken);
 
     if (!userData) {
       return next(ApiException.unauthorizedError());

@@ -18,7 +18,7 @@ export async function createUser(
     }
 
     const { userId, accessToken, refreshToken } = await container
-      .get<UsersService>(UsersService.name)
+      .get(UsersService)
       .registerUser(req.body);
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
@@ -42,7 +42,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     }
 
     const { userId, accessToken, refreshToken } = await container
-      .get<UsersService>(UsersService.name)
+      .get(UsersService)
       .login(req.body);
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
@@ -62,9 +62,7 @@ export async function getUsers(
 ) {
   try {
     // Handle get users logic here
-    const users = await container
-      .get<UsersService>(UsersService.name)
-      .getUsers();
+    const users = await container.get(UsersService).getUsers();
     res.send(users);
   } catch (e) {
     next(e);

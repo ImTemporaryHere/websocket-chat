@@ -27,9 +27,7 @@ container.register(SocketIoTransport, [GroupsEventHandler]);
 const app: Express = express();
 const port = process.env.PORT || 3000;
 const expressServer = createServer(app);
-container
-  .get<SocketIoTransport>(SocketIoTransport.name)
-  .setupServer(expressServer);
+container.get(SocketIoTransport).setupServer(expressServer);
 
 // Middleware to parse JSON requests
 app.use(express.json());
