@@ -1,4 +1,3 @@
-import { Server } from "http";
 import { Server as IoServer, Socket } from "socket.io";
 import { GroupsEventHandler } from "../groups/groups-event-handler";
 
@@ -7,8 +6,8 @@ export class SocketIoTransport {
 
   constructor(private readonly groupsEventHandler: GroupsEventHandler) {}
 
-  setupServer(server: Server) {
-    this.io = new IoServer(server);
+  setupServer(io: IoServer) {
+    this.io = io;
     this.io.on("connection", this.registerHandlers.bind(this));
   }
 
@@ -56,6 +55,8 @@ export class SocketIoTransport {
       .emit("userLeft", `User ${socket.id} left ${groupName}`);
     this.groupsEventHandler.leaveGroup(groupName, socket.id); //todo user id from db
   }
+
+  //responsibility
 
   joinGroup(socket: Socket, groupName: string) {
     socket.join(groupName);
