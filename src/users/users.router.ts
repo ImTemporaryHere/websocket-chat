@@ -2,7 +2,7 @@ import express, { Router } from "express";
 import { createUser, getUsers, login } from "./users.controller";
 import { authMiddleware } from "../middlewares/auth-middleware";
 import { body } from "express-validator";
-import { container } from "../container";
+import { container } from "../ioc-container/container";
 
 export const usersRouter = express.Router({ mergeParams: true });
 

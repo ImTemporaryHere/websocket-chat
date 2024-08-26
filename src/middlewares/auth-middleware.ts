@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { ApiException } from "../exeptions/api-exception";
 import { AuthService, TokenPayload } from "../users/auth.service";
-import { container } from "../container";
+import { container } from "../ioc-container/container";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -21,7 +21,9 @@ export const authMiddleware = (
       return next(ApiException.unauthorizedError());
     }
 
-    const userData = container.get(AuthService).verifyAccessToken(accessToken);
+    const userData = container
+      .get("AuthService")
+      .verifyAccessToken(accessToken);
 
     if (!userData) {
       return next(ApiException.unauthorizedError());

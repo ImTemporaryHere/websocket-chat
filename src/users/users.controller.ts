@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { UsersService } from "./users.service";
 import { validationResult } from "express-validator";
 import { ApiException } from "../exeptions/api-exception";
-import { container } from "../container";
+import { container } from "../ioc-container/container";
 
 export async function createUser(
   req: Request,
@@ -18,7 +18,7 @@ export async function createUser(
     }
 
     const { userId, accessToken, refreshToken } = await container
-      .get(UsersService)
+      .get("UsersService")
       .registerUser(req.body);
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
@@ -42,7 +42,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     }
 
     const { userId, accessToken, refreshToken } = await container
-      .get(UsersService)
+      .get("UsersService")
       .login(req.body);
     res.cookie("refresh_token", refreshToken, {
       httpOnly: true,
@@ -62,7 +62,7 @@ export async function getUsers(
 ) {
   try {
     // Handle get users logic here
-    const users = await container.get(UsersService).getUsers();
+    const users = await container.get("UsersService").getUsers();
     res.send(users);
   } catch (e) {
     next(e);

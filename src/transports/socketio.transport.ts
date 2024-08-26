@@ -1,81 +1,56 @@
-import { Server as IoServer, Socket } from "socket.io";
-import { GroupsEventHandler } from "../groups/groups-event-handler";
+import { UserSocketsMapper } from "./sokets-mapper";
+import { CreateGroupTransportParams, Transport } from "./transport";
+import { container } from "../ioc-container/container";
+import { JoinGroupDto } from "../groups/dto/join-group.dto";
+import { GroupMessageInterface } from "../groups/interfaces/group-message.interface";
 
-export class SocketIoTransport {
-  io!: IoServer;
+export class SocketIoTransport implements Transport {
+  constructor(private readonly mapper: UserSocketsMapper) {}
 
-  constructor(private readonly groupsEventHandler: GroupsEventHandler) {}
-
-  setupServer(io: IoServer) {
-    this.io = io;
-    this.io.on("connection", this.registerHandlers.bind(this));
+  notify({
+    topic,
+    userId,
+    message,
+  }: {
+    topic: string;
+    userId: string;
+    message?: any;
+  }) {
+    this.mapper.getSocket(userId).emit(topic, message);
   }
 
-  private registerHandlers(socket: Socket) {
-    socket.on("createGroup", async (userId: string, groupName: string) => {
-      await this.createGroup(userId, groupName, socket);
-    });
-
-    socket.on("removeGroup", (groupName: string) => {
-      this.removeGroup(groupName);
-    });
-
-    socket.on("leaveGroup", (groupName: string) => {
-      this.leaveGroup(socket, groupName);
-    });
-
-    socket.on("joinGroup", (groupName: string) => {
-      this.joinGroup(socket, groupName);
-    });
-
-    socket.on("groupMessage", (groupName: string, message: string) => {
-      this.sendMessageToGroup(socket, groupName, message);
+  createGroup({ groupId, participantsId }: CreateGroupTransportParams) {
+    participantsId.forEach((userId) => {
+      const socket = this.mapper.getSocket(userId);
+      socket.join(groupId);
     });
   }
+  removeGroup(groupId: string) {
+    container.get("io").socketsLeave(groupId);
+  }
 
-  async createGroup(ownerId: string, name: string, socket: Socket) {
-    const newGroup = await this.groupsEventHandler.createGroup({
-      ownerId,
-      name,
-      participantsId: [ownerId],
+  leaveGroup(userId: string, groupId: string) {
+    this.mapper.getSocket(userId).leave(groupId);
+    container
+      .get("io")
+      .to(groupId)
+      .emit("userLeft", `User ${userId} left this group`);
+  }
+
+  joinGroup({ groupId, usersId }: JoinGroupDto) {
+    usersId.forEach((userId) => {
+      const socket = this.mapper.getSocket(userId).join(groupId);
+
+      container
+        .get("io")
+        .to(groupId)
+        .emit("userJoined", `User ${socket.id} joined ${groupId}`);
     });
-    socket.emit("groupCreated", newGroup);
   }
-
-  removeGroup(groupName: string) {
-    this.io.socketsLeave(groupName);
-    this.groupsEventHandler.removeGroup(groupName);
-  }
-
-  leaveGroup(socket: Socket, groupName: string) {
-    socket.leave(groupName);
-    console.log(`User ${socket.id} left room ${groupName}`);
-    this.io
-      .to(groupName)
-      .emit("userLeft", `User ${socket.id} left ${groupName}`);
-    this.groupsEventHandler.leaveGroup(groupName, socket.id); //todo user id from db
-  }
-
-  //responsibility
-
-  joinGroup(socket: Socket, groupName: string) {
-    socket.join(groupName);
-    console.log(`User ${socket.id} joined room ${groupName}`);
-    this.io
-      .to(groupName)
-      .emit("userJoined", `User ${socket.id} joined ${groupName}`);
-    this.groupsEventHandler.joinGroup(); //todo user id from db
-  }
-
-  sendMessageToGroup(socket: Socket, groupName: string, message: string) {
-    this.io.in(groupName).emit("groupMessage", {
-      sender: socket.id,
+  sendMessageToGroup({ message, groupId, senderId }: GroupMessageInterface) {
+    container.get("io").in(groupId).emit("groupMessage", {
+      sender: senderId,
       message,
     });
-    this.groupsEventHandler.sendMessageToGroup({
-      groupName,
-      message,
-      userId: socket.id,
-    }); //todo user id from db
   }
 }
