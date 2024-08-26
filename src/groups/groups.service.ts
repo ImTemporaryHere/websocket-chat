@@ -1,7 +1,6 @@
 import { GroupsRepository } from "./groups.repository";
 import { ICreateGroup } from "./interfaces/create-group.interface";
 import { Transport } from "../transports/transport";
-import { JoinGroupDto } from "./dto/join-group.dto";
 import { GroupMessageInterface } from "./interfaces/group-message.interface";
 
 export class GroupsService {
@@ -41,9 +40,9 @@ export class GroupsService {
     await this.groupsRepository.leaveGroup(userId, groupId);
   }
 
-  async joinGroup(data: JoinGroupDto) {
-    this.transport.joinGroup(data);
-    await this.groupsRepository.joinGroup(data);
+  async joinGroup(userId: string, groupId: string) {
+    this.transport.joinGroup(userId, groupId);
+    await this.groupsRepository.joinGroup(userId, groupId);
   }
 
   async sendMessageToGroup(data: GroupMessageInterface) {

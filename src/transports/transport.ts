@@ -1,4 +1,3 @@
-import { JoinGroupDto } from "../groups/dto/join-group.dto";
 import { GroupMessageInterface } from "../groups/interfaces/group-message.interface";
 
 export interface Transport {
@@ -6,7 +5,7 @@ export interface Transport {
   createGroup(params: CreateGroupTransportParams): void;
   removeGroup(groupId: string): void;
   leaveGroup(userId: string, groupId: string): void;
-  joinGroup(data: JoinGroupDto): void;
+  joinGroup(userId: string, groupId: string): void;
   sendMessageToGroup(data: GroupMessageInterface): void;
 }
 

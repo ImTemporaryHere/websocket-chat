@@ -1,10 +1,7 @@
 import { GroupsService } from "./groups.service";
 import { Socket } from "socket.io";
 import { CreateGroupDto } from "./dto/create-group.dto";
-import { JoinGroupDto } from "./dto/join-group.dto";
 import { SendGroupMessageDto } from "./dto/send-group-message.dto";
-
-const mockUserId = "66bcf5485cbc0fec59d792e1";
 
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
@@ -12,49 +9,52 @@ export class GroupsController {
   async createGroup(socket: Socket, { participantsId, name }: CreateGroupDto) {
     try {
       await this.groupsService.createGroup({
-        ownerId: mockUserId, // todo  extract owner id from request
+        ownerId: socket.user.userId,
         name,
         participantsId,
       });
-    } catch (e) {
-      socket.emit("group.create.error", e);
+    } catch (e: any) {
+      console.error(e);
+      socket.emit("group.create.error", e.toString());
     }
   }
 
   async removeGroup(socket: Socket, groupId: string) {
     try {
-      await this.groupsService.removeGroup("66bcf5485cbc0fec59d792e1", groupId);
-    } catch (e) {
-      socket.emit("group.remove.error", e);
+      await this.groupsService.removeGroup(socket.user.userId, groupId);
+    } catch (e: any) {
+      console.error(e);
+      socket.emit("group.remove.error", e.toString());
     }
   }
 
   async leaveGroup(socket: Socket, groupId: string) {
     try {
-      // todo  extract user id from socket/request
-      await this.groupsService.leaveGroup(mockUserId, groupId);
-    } catch (e) {
-      socket.emit("group.leave.error", e);
+      await this.groupsService.leaveGroup(socket.user.userId, groupId);
+    } catch (e: any) {
+      console.error(e);
+      socket.emit("group.leave.error", e.toString());
     }
   }
 
-  async joinGroup(socket: Socket, data: JoinGroupDto) {
+  async joinGroup(socket: Socket, groupId: string) {
     try {
-      await this.groupsService.joinGroup(data);
-    } catch (e) {
-      socket.emit("group.join.error", e);
+      await this.groupsService.joinGroup(socket.user.userId, groupId);
+    } catch (e: any) {
+      console.error(e);
+      socket.emit("group.join.error", e.toString());
     }
   }
 
   async sendMessageToGroup(socket: Socket, data: SendGroupMessageDto) {
     try {
-      // todo  extract user id from socket/request
       await this.groupsService.sendMessageToGroup({
         ...data,
-        senderId: mockUserId,
+        senderId: socket.user.userId,
       });
-    } catch (e) {
-      socket.emit("group.send-message.command", e);
+    } catch (e: any) {
+      console.error(e);
+      socket.emit("group.send-message.command", e.toString());
     }
   }
 }

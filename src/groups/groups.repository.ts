@@ -1,7 +1,6 @@
 import { GroupModel, Group } from "./group.model";
 import { ICreateGroup } from "./interfaces/create-group.interface";
 import mongoose from "mongoose";
-import { JoinGroupDto } from "./dto/join-group.dto";
 
 export class GroupsRepository {
   create(group: ICreateGroup) {
@@ -35,9 +34,11 @@ export class GroupsRepository {
     ).exec();
   }
 
-  joinGroup({ groupId, usersId }: JoinGroupDto) {
+  joinGroup(userId: string, groupId: string) {
     return GroupModel.findByIdAndUpdate(groupId, {
-      $addToSet: { participantsId: { $each: usersId } },
+      $push: {
+        participantsId: new mongoose.Types.ObjectId(userId),
+      },
     }).exec();
   }
 }

@@ -1,7 +1,6 @@
 import { UserSocketsMapper } from "./sokets-mapper";
 import { CreateGroupTransportParams, Transport } from "./transport";
 import { container } from "../ioc-container/container";
-import { JoinGroupDto } from "../groups/dto/join-group.dto";
 import { GroupMessageInterface } from "../groups/interfaces/group-message.interface";
 
 export class SocketIoTransport implements Transport {
@@ -16,13 +15,22 @@ export class SocketIoTransport implements Transport {
     userId: string;
     message?: any;
   }) {
-    this.mapper.getSocket(userId).emit(topic, message);
+    const sockets = this.mapper.getSockets(userId);
+    if (sockets) {
+      sockets.forEach((socket) => socket.emit(topic, message));
+    }
   }
 
   createGroup({ groupId, participantsId }: CreateGroupTransportParams) {
+    console.log("participantsId", participantsId);
     participantsId.forEach((userId) => {
-      const socket = this.mapper.getSocket(userId);
-      socket.join(groupId);
+      const sockets = this.mapper.getSockets(userId);
+      if (sockets) {
+        sockets.forEach((socket) => {
+          socket.join(groupId);
+          socket.emit("user.added-to-group.event", groupId);
+        });
+      }
     });
   }
   removeGroup(groupId: string) {
@@ -30,25 +38,23 @@ export class SocketIoTransport implements Transport {
   }
 
   leaveGroup(userId: string, groupId: string) {
-    this.mapper.getSocket(userId).leave(groupId);
+    this.mapper.getSockets(userId)?.forEach((s) => s.leave(groupId));
     container
       .get("io")
       .to(groupId)
       .emit("userLeft", `User ${userId} left this group`);
   }
 
-  joinGroup({ groupId, usersId }: JoinGroupDto) {
-    usersId.forEach((userId) => {
-      const socket = this.mapper.getSocket(userId).join(groupId);
+  joinGroup(userId: string, groupId: string) {
+    this.mapper.getSockets(userId)?.forEach((socket) => socket.join(groupId));
 
-      container
-        .get("io")
-        .to(groupId)
-        .emit("userJoined", `User ${socket.id} joined ${groupId}`);
-    });
+    container
+      .get("io")
+      .to(groupId)
+      .emit("userJoined", `User ${userId} joined ${groupId}`);
   }
   sendMessageToGroup({ message, groupId, senderId }: GroupMessageInterface) {
-    container.get("io").in(groupId).emit("groupMessage", {
+    container.get("io").in(groupId).emit("group.message-sent.event", {
       sender: senderId,
       message,
     });
