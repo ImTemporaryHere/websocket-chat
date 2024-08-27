@@ -1,9 +1,11 @@
 import { Server } from "socket.io";
-import { container } from "../ioc-container/container";
+import { UserSocketsMapper } from "../transports/sokets-mapper";
 type IoMiddleware = Parameters<Server["use"]>[0];
 
-export const socketIoUserMapperMiddleware: IoMiddleware = (socket, next) => {
-  container.get("SocketsMapper").addSocket(socket.user.userId, socket);
+export const getSocketIoUserMapperMiddleware: (
+  socketsMapper: UserSocketsMapper,
+) => IoMiddleware = (socketsMapper) => (socket, next) => {
+  socketsMapper.addSocket(socket.user.userId, socket);
 
   next();
 };

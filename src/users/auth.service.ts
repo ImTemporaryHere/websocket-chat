@@ -37,10 +37,18 @@ export class AuthService {
   }
 
   verifyAccessToken(token: string) {
-    return jwt.verify(token, process.env.JWT_ACCESS_SECRET as string);
+    try {
+      return jwt.verify(token, process.env.JWT_ACCESS_SECRET as string);
+    } catch (e) {
+      return null;
+    }
   }
 
   verifyRefreshToken(token: string) {
-    return jwt.verify(token, process.env.JWT_ACCESS_SECRET as string);
+    try {
+      return jwt.verify(token, process.env.JWT_ACCESS_SECRET as string);
+    } catch (e) {
+      return null;
+    }
   }
 }

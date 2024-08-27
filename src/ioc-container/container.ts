@@ -6,7 +6,17 @@ type ServiceDefinition =
   | Constructor // Constructor function (class)
   | ((...params: any) => any); // Regular function
 
-class Container {
+export class IocContainer {
+  private static instance: IocContainer;
+
+  public static getInstance() {
+    if (!this.instance) {
+      this.instance = new IocContainer();
+    }
+
+    return this.instance;
+  }
+
   private registeredServices: Map<
     string,
     {
@@ -53,5 +63,3 @@ class Container {
     return instance;
   }
 }
-
-export const container = new Container();

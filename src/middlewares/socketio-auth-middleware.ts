@@ -1,6 +1,5 @@
 import { Server } from "socket.io";
-import { container } from "../ioc-container/container";
-import { TokenPayload } from "../users/auth.service";
+import { AuthService, TokenPayload } from "../users/auth.service";
 type IoMiddleware = Parameters<Server["use"]>[0];
 
 declare module "socket.io" {
@@ -9,13 +8,15 @@ declare module "socket.io" {
   }
 }
 
-export const authSocketMiddleware: IoMiddleware = (socket, next) => {
+export const getAuthSocketMiddleware: (
+  authService: AuthService,
+) => IoMiddleware = (authService) => (socket, next) => {
   const accessToken = socket.handshake.headers.access_token as string;
   if (!accessToken) {
     return next(new Error("not authorized"));
   }
 
-  const userData = container.get("AuthService").verifyAccessToken(accessToken);
+  const userData = authService.verifyAccessToken(accessToken);
 
   if (!userData) {
     return next(new Error("not authorized"));

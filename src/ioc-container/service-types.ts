@@ -7,16 +7,18 @@ import { GroupsService } from "../groups/groups.service";
 import { GroupsController } from "../groups/groups.controller";
 import { SocketIoTransport } from "../transports/socketio.transport";
 import { UserSocketsMapper } from "../transports/sokets-mapper";
+import { UserController } from "../users/users.controller";
 
 export type ServiceTypes = {
   io: IoServer;
   UsersRepository: UsersRepository;
   AuthService: AuthService;
   UsersService: UsersService;
+  UserController: UserController;
   GroupsRepository: GroupsRepository;
   GroupsService: GroupsService;
   GroupsController: GroupsController;
   SocketIoTransport: SocketIoTransport;
-  SocketsMapper: UserSocketsMapper;
+  UserSocketsMapper: UserSocketsMapper;
   Transport: SocketIoTransport;
 };

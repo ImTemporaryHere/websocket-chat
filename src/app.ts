@@ -3,10 +3,8 @@ import express, { Express, Request, Response } from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { routers } from "./routers";
 import { errorMiddleware } from "./middlewares/error-middleware";
 import { createServer } from "http";
-import { container } from "./ioc-container/container";
 import { UsersService } from "./users/users.service";
 import { UsersRepository } from "./users/users.repository";
 import { AuthService } from "./users/auth.service";
@@ -17,18 +15,19 @@ import { GroupsRepository } from "./groups/groups.repository";
 import { Server as IoServer, Socket } from "socket.io";
 import { registerGroupHandlers } from "./groups/groups.event-handlers";
 import { UserSocketsMapper } from "./transports/sokets-mapper";
-import { authSocketMiddleware } from "./middlewares/socketio-auth-middleware";
-import { socketIoUserMapperMiddleware } from "./middlewares/socketio-user-mapper-middleware";
+import { getAuthSocketMiddleware } from "./middlewares/socketio-auth-middleware";
+import { getSocketIoUserMapperMiddleware } from "./middlewares/socketio-user-mapper-middleware";
+import { IocContainer } from "./ioc-container/container";
+import { UserController } from "./users/users.controller";
+import { UsersRouter } from "./users/users.router";
 
 export async function runApp() {
+  const container = IocContainer.getInstance();
+
   const app: Express = express();
   const port = process.env.PORT || 3000;
   const expressServer = createServer(app);
   const io = new IoServer(expressServer);
-  container.register("io", () => io);
-  io.use(authSocketMiddleware);
-  io.use(socketIoUserMapperMiddleware);
-  io.on("connection", registerHandlers);
 
   container.register("UsersRepository", UsersRepository);
   container.register("AuthService", AuthService);
@@ -36,21 +35,32 @@ export async function runApp() {
     "AuthService",
     "UsersRepository",
   ]);
-
+  container.register("UserController", UserController, ["UsersService"]);
+  //groups
+  container.register("io", () => io);
   container.register("GroupsRepository", GroupsRepository);
-  container.register("SocketsMapper", UserSocketsMapper);
-  container.register("Transport", SocketIoTransport, ["SocketsMapper"]);
+  container.register("UserSocketsMapper", UserSocketsMapper);
+  container.register("Transport", SocketIoTransport, [
+    "UserSocketsMapper",
+    "io",
+  ]);
   container.register("GroupsService", GroupsService, [
     "GroupsRepository",
     "Transport",
   ]);
   container.register("GroupsController", GroupsController, ["GroupsService"]);
 
+  io.use(getAuthSocketMiddleware(container.get("AuthService")));
+  io.use(getSocketIoUserMapperMiddleware(container.get("UserSocketsMapper")));
+  io.on("connection", registerHandlers);
+
   // Middleware to parse JSON requests
   app.use(express.json());
   app.use(cookieParser());
   app.use(cors());
-  app.use("/api", routers);
+  app.use("/api", [
+    UsersRouter(container.get("UserController"), container.get("AuthService")),
+  ]);
   app.use(errorMiddleware);
 
   mongoose.connection.on("error", (err: any) => {
@@ -70,6 +80,6 @@ export async function runApp() {
   });
 
   function registerHandlers(socket: Socket) {
-    registerGroupHandlers(socket);
+    registerGroupHandlers(socket, container.get("GroupsController"));
   }
 }

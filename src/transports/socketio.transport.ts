@@ -1,10 +1,13 @@
+import { Server } from "socket.io";
 import { UserSocketsMapper } from "./sokets-mapper";
 import { CreateGroupTransportParams, Transport } from "./transport";
-import { container } from "../ioc-container/container";
 import { GroupMessageInterface } from "../groups/interfaces/group-message.interface";
 
 export class SocketIoTransport implements Transport {
-  constructor(private readonly mapper: UserSocketsMapper) {}
+  constructor(
+    private readonly mapper: UserSocketsMapper,
+    private readonly io: Server,
+  ) {}
 
   notify({
     topic,
@@ -22,7 +25,6 @@ export class SocketIoTransport implements Transport {
   }
 
   createGroup({ groupId, participantsId }: CreateGroupTransportParams) {
-    console.log("participantsId", participantsId);
     participantsId.forEach((userId) => {
       const sockets = this.mapper.getSockets(userId);
       if (sockets) {
@@ -33,27 +35,21 @@ export class SocketIoTransport implements Transport {
     });
   }
   removeGroup(groupId: string) {
-    container.get("io").socketsLeave(groupId);
+    this.io.socketsLeave(groupId);
   }
 
   leaveGroup(userId: string, groupId: string) {
     this.mapper.getSockets(userId)?.forEach((s) => s.leave(groupId));
-    container
-      .get("io")
-      .to(groupId)
-      .emit("userLeft", `User ${userId} left this group`);
+    this.io.to(groupId).emit("userLeft", `User ${userId} left this group`);
   }
 
   joinGroup(userId: string, groupId: string) {
     this.mapper.getSockets(userId)?.forEach((socket) => socket.join(groupId));
 
-    container
-      .get("io")
-      .to(groupId)
-      .emit("userJoined", `User ${userId} joined ${groupId}`);
+    this.io.to(groupId).emit("userJoined", `User ${userId} joined ${groupId}`);
   }
   sendMessageToGroup({ message, groupId, senderId }: GroupMessageInterface) {
-    container.get("io").in(groupId).emit("group.message-sent.event", {
+    this.io.in(groupId).emit("group.message-sent.event", {
       sender: senderId,
       message,
     });

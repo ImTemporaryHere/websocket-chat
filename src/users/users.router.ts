@@ -1,22 +1,30 @@
 import express, { Router } from "express";
-import { createUser, getUsers, login } from "./users.controller";
-import { authMiddleware } from "../middlewares/auth-middleware";
+import { getAuthMiddleware } from "../middlewares/auth-middleware";
 import { body } from "express-validator";
-import { container } from "../ioc-container/container";
+import { UserController } from "./users.controller";
+import { AuthService } from "./auth.service";
 
-export const usersRouter = express.Router({ mergeParams: true });
-
-usersRouter
-  .post(
-    "/users",
-    body("email").isEmail(),
-    body("password").isLength({ min: 3, max: 20 }),
-    createUser,
-  )
-  .get("/users", authMiddleware, getUsers)
-  .post(
-    "/login",
-    body("email").isEmail(),
-    body("password").isLength({ min: 3, max: 20 }),
-    login,
-  );
+export function UsersRouter(
+  userController: UserController,
+  authService: AuthService,
+) {
+  return express
+    .Router({ mergeParams: true })
+    .post(
+      "/users",
+      body("email").isEmail(),
+      body("password").isLength({ min: 3, max: 20 }),
+      userController.createUser.bind(userController),
+    )
+    .get(
+      "/users",
+      getAuthMiddleware(authService),
+      userController.getUsers.bind(userController),
+    )
+    .post(
+      "/login",
+      body("email").isEmail(),
+      body("password").isLength({ min: 3, max: 20 }),
+      userController.login.bind(userController),
+    );
+}
