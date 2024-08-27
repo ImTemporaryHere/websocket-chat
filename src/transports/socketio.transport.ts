@@ -28,7 +28,6 @@ export class SocketIoTransport implements Transport {
       if (sockets) {
         sockets.forEach((socket) => {
           socket.join(groupId);
-          socket.emit("user.added-to-group.event", groupId);
         });
       }
     });

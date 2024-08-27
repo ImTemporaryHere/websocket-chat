@@ -22,6 +22,14 @@ export class GroupsService {
       userId: params.ownerId,
       message: createdGroup._id,
     });
+
+    params.participantsId.forEach((participantId: string) => {
+      this.transport.notify({
+        topic: "user.added-to-group.event",
+        userId: participantId,
+        message: createdGroup._id.toString(),
+      });
+    });
   }
 
   async removeGroup(currentUserId: string, groupId: string) {
