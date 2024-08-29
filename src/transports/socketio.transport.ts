@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import { UserSocketsMapper } from "./sokets-mapper";
 import { CreateGroupTransportParams, Transport } from "./transport";
 import { GroupMessageInterface } from "../groups/interfaces/group-message.interface";
+import { TransportTopics } from "./transport-topics";
 
 export class SocketIoTransport implements Transport {
   constructor(
@@ -14,7 +15,7 @@ export class SocketIoTransport implements Transport {
     userId,
     message,
   }: {
-    topic: string;
+    topic: TransportTopics;
     userId: string;
     message?: any;
   }) {
@@ -48,10 +49,8 @@ export class SocketIoTransport implements Transport {
 
     this.io.to(groupId).emit("userJoined", `User ${userId} joined ${groupId}`);
   }
-  sendMessageToGroup({ message, groupId, senderId }: GroupMessageInterface) {
-    this.io.in(groupId).emit("group.message-sent.event", {
-      sender: senderId,
-      message,
-    });
+
+  sendMessageToGroup(data: GroupMessageInterface) {
+    this.io.in(data.groupId).emit(TransportTopics.groupMessageSent, data);
   }
 }

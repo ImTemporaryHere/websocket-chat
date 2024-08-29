@@ -2,6 +2,7 @@ import { GroupsRepository } from "./groups.repository";
 import { ICreateGroup } from "./interfaces/create-group.interface";
 import { Transport } from "../transports/transport";
 import { GroupMessageInterface } from "./interfaces/group-message.interface";
+import { TransportTopics } from "../transports/transport-topics";
 
 export class GroupsService {
   constructor(
@@ -10,6 +11,8 @@ export class GroupsService {
   ) {}
 
   async createGroup(params: ICreateGroup) {
+    params.participantsId.push(params.ownerId);
+
     const createdGroup = await this.groupsRepository.create(params);
 
     this.transport.createGroup({
@@ -18,14 +21,14 @@ export class GroupsService {
     });
 
     this.transport.notify({
-      topic: "group.created.event",
+      topic: TransportTopics.groupCreated,
       userId: params.ownerId,
       message: createdGroup._id,
     });
 
     params.participantsId.forEach((participantId: string) => {
       this.transport.notify({
-        topic: "user.added-to-group.event",
+        topic: TransportTopics.userAddedToGroup,
         userId: participantId,
         message: createdGroup._id.toString(),
       });
@@ -37,7 +40,7 @@ export class GroupsService {
     this.transport.removeGroup(groupId);
     await this.groupsRepository.remove(groupId);
     this.transport.notify({
-      topic: "group.removed.event",
+      topic: TransportTopics.groupRemoved,
       userId: currentUserId,
       message: groupId,
     });

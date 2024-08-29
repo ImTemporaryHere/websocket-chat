@@ -1,7 +1,12 @@
 import { GroupMessageInterface } from "../groups/interfaces/group-message.interface";
+import { TransportTopics } from "./transport-topics";
 
 export interface Transport {
-  notify(params: { topic: string; userId: string; message?: any }): void;
+  notify(params: {
+    topic: TransportTopics;
+    userId: string;
+    message?: any;
+  }): void;
   createGroup(params: CreateGroupTransportParams): void;
   removeGroup(groupId: string): void;
   leaveGroup(userId: string, groupId: string): void;

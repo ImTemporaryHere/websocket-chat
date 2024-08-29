@@ -2,6 +2,7 @@ import { Socket } from "socket.io";
 import { CreateGroupDto } from "./dto/create-group.dto";
 import { SendGroupMessageDto } from "./dto/send-group-message.dto";
 import { GroupsController } from "./groups.controller";
+import { TransportTopics } from "../transports/transport-topics";
 
 export function registerGroupHandlers(
   socket: Socket,
@@ -11,7 +12,7 @@ export function registerGroupHandlers(
     await groupsController.createGroup(socket, data);
   });
 
-  socket.on("group.remove.command", async (groupId: string) => {
+  socket.on(TransportTopics.removeGroup, async (groupId: string) => {
     await groupsController.removeGroup(socket, groupId);
   });
 
@@ -23,7 +24,10 @@ export function registerGroupHandlers(
     await groupsController.joinGroup(socket, groupId);
   });
 
-  socket.on("group.send-message.command", async (data: SendGroupMessageDto) => {
-    await groupsController.sendMessageToGroup(socket, data);
-  });
+  socket.on(
+    TransportTopics.sendGroupMessage,
+    async (data: SendGroupMessageDto) => {
+      await groupsController.sendMessageToGroup(socket, data);
+    },
+  );
 }

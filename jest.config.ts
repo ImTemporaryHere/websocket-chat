@@ -7,7 +7,7 @@ const config: Config = {
   transform: {
     "^.+\\.ts$": "ts-jest",
   },
-  testTimeout: 10000, // Adjust the timeout for async operations if necessary
+  testTimeout: 5000, // Adjust the timeout for async operations if necessary
   rootDir: "tests",
   setupFilesAfterEnv: ["./jest.setup.ts"],
 };
