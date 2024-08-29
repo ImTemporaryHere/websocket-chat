@@ -2,6 +2,7 @@ import { UsersRepository } from "./users.repository";
 import { User } from "./user.model";
 import { AuthService } from "./auth.service";
 import { ApiException } from "../exeptions/api-exception";
+import { MongooseError } from "mongoose";
 
 export class UsersService {
   constructor(
@@ -14,22 +15,29 @@ export class UsersService {
     userId: string;
     refreshToken: string;
   }> {
-    const hashedPassword = await this.authService.hashPassword(user.password);
+    try {
+      const hashedPassword = await this.authService.hashPassword(user.password);
 
-    const createdUser = await this.usersRepository.create({
-      ...user,
-      password: hashedPassword,
-    });
+      const createdUser = await this.usersRepository.create({
+        ...user,
+        password: hashedPassword,
+      });
 
-    const { accessToken, refreshToken } = this.authService.generateTokens({
-      userId: createdUser._id.toString(),
-    });
+      const { accessToken, refreshToken } = this.authService.generateTokens({
+        userId: createdUser._id.toString(),
+      });
 
-    return {
-      accessToken,
-      refreshToken,
-      userId: createdUser._id.toString(),
-    };
+      return {
+        accessToken,
+        refreshToken,
+        userId: createdUser._id.toString(),
+      };
+    } catch (e: any) {
+      if (e.code === 11000) {
+        throw ApiException.badRequestError("duplicate email");
+      }
+      throw e;
+    }
   }
 
   async login(userData: User) {
@@ -63,5 +71,9 @@ export class UsersService {
 
   getUsers() {
     return this.usersRepository.find();
+  }
+
+  deleteOne(userId: string) {
+    return this.usersRepository.deleteOne(userId);
   }
 }

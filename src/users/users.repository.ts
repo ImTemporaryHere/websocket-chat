@@ -13,4 +13,8 @@ export class UsersRepository {
   findOne(params: Partial<User>) {
     return UserModel.findOne(params).exec();
   }
+
+  deleteOne(userId: string) {
+    return UserModel.findByIdAndDelete(userId).exec();
+  }
 }

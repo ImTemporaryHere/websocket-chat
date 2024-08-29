@@ -26,8 +26,8 @@ export async function runApp() {
 
   const app: Express = express();
   const port = process.env.PORT || 3000;
-  const expressServer = createServer(app);
-  const io = new IoServer(expressServer);
+  const httpServer = createServer(app);
+  const io = new IoServer(httpServer);
 
   container.register("UsersRepository", UsersRepository);
   container.register("AuthService", AuthService);
@@ -69,15 +69,32 @@ export async function runApp() {
 
   // MongoDB Connection URI
   const mongoURI = process.env.MONGODB_URI as string;
-
+  console.log("mongo", mongoURI);
   // Connect to MongoDB using Mongoose
   await mongoose.connect(mongoURI);
 
   console.log("Connected to MongoDB");
 
-  expressServer.listen(port, () => {
+  httpServer.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
+
+  return stopService;
+
+  async function stopService() {
+    await new Promise((resolve, reject) => {
+      io.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(0);
+        }
+      });
+    });
+    console.log("io server closed");
+
+    await mongoose.disconnect();
+  }
 
   function registerHandlers(socket: Socket) {
     registerGroupHandlers(socket, container.get("GroupsController"));

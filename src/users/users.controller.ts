@@ -22,10 +22,23 @@ export class UserController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      return res.json({ userId, accessToken });
+      return res.status(201).json({ userId, accessToken });
     } catch (e) {
       next(e);
     }
+  }
+
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return next(
+        ApiException.badRequestError("validation errors", errors.array()),
+      );
+    }
+
+    await this.usersService.deleteOne(req.params.userId);
+
+    res.status(204).send();
   }
 
   async login(req: Request, res: Response, next: NextFunction) {
@@ -45,7 +58,7 @@ export class UserController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      return res.json({ userId, accessToken });
+      return res.status(200).json({ userId, accessToken });
     } catch (e) {
       next(e);
     }
