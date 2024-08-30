@@ -92,8 +92,6 @@ export async function runApp() {
       });
     });
     console.log("io server closed");
-
-    await mongoose.disconnect();
   }
 
   function registerHandlers(socket: Socket) {

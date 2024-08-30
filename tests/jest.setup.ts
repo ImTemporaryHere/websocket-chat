@@ -1,18 +1,11 @@
 import { runApp } from "../src/app";
 import { config } from "dotenv";
+import mongoose from "mongoose";
 
 config({ path: `envs/.env.${process.env.NODE_ENV}` });
 
-let stopServiceCallback: () => Promise<void>;
+export let stopServiceCallback: () => Promise<void>;
 
-beforeAll(async () => {
+export default async function globalSetup() {
   stopServiceCallback = await runApp();
-});
-
-afterAll(async () => {
-  try {
-    await stopServiceCallback();
-  } catch (e) {
-    console.error(e);
-  }
-});
+}
