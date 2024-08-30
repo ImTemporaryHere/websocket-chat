@@ -4,6 +4,7 @@ import { User } from "../../src/users/user.model";
 import { TransportTopics } from "../../src/transports/transport-topics";
 import { GroupMessageInterface } from "../../src/groups/interfaces/group-message.interface";
 import { CreateGroupDto } from "../../src/groups/dto/create-group.dto";
+import { UserJoinGroupPayload } from "../../src/groups/interfaces/user-join-group-payload.interface";
 
 const baseUrl = `http://localhost:3000`;
 
@@ -26,7 +27,8 @@ describe("E2E Tests", () => {
   let secondUserAccessToken: string;
   let firstUserSocket: Socket;
   let secondUserSocket: Socket;
-  let groupId: string;
+  let firstGroupId: string;
+  let secondGroupId: string;
 
   afterAll(() => {
     firstUserSocket.disconnect();
@@ -152,47 +154,44 @@ describe("E2E Tests", () => {
   });
 
   test("user can create group", async () => {
-    const [groupCreatedPromise, resolveGroupCreatedCb] =
-      getPromiseWithResolveCb("groupCreated", 2000);
     const [userAddedToGroupPromise, resolveUserAddedToGroupCb] =
       getPromiseWithResolveCb("userAddedToGroup", 2000);
 
-    firstUserSocket.on(TransportTopics.groupCreated, (createdGroupId) => {
-      expect(typeof createdGroupId).toBe("string");
-      if (groupId) {
-        expect(groupId).toBe(createdGroupId);
-      } else {
-        groupId = createdGroupId;
-      }
-      resolveGroupCreatedCb(0);
-    });
-    secondUserSocket.on(TransportTopics.userAddedToGroup, (createdGroupId) => {
-      expect(typeof createdGroupId).toBe("string");
-      if (groupId) {
-        expect(groupId).toBe(createdGroupId);
-      } else {
-        groupId = createdGroupId;
-      }
-      resolveUserAddedToGroupCb(0);
-    });
+    secondUserSocket.once(
+      TransportTopics.userAddedToGroup,
+      (createdGroupId) => {
+        if (firstGroupId) {
+          expect(firstGroupId).toBe(createdGroupId);
+        } else {
+          firstGroupId = createdGroupId;
+        }
+        resolveUserAddedToGroupCb(0);
+      },
+    );
 
-    const createGroupData: CreateGroupDto = {
-      name: "just a new group",
-      participantsId: [secondUserId],
-    };
-    firstUserSocket.emit(TransportTopics.createGroup, createGroupData);
+    const createdGroupId = await userSocketCreateGroup(
+      firstUserSocket,
+      [secondUserId],
+      1000,
+    );
+    expect(typeof createdGroupId).toBe("string");
+    if (firstGroupId) {
+      expect(firstGroupId).toBe(createdGroupId);
+    } else {
+      firstGroupId = createdGroupId;
+    }
 
-    await Promise.all([groupCreatedPromise, userAddedToGroupPromise]);
+    await userAddedToGroupPromise;
   });
 
   test("users in same group can send and receive group messages", async () => {
     const [groupMessageSentPromise, resolveGroupMessageSentCb] =
       getPromiseWithResolveCb("groupMessageSent", 2000);
 
-    firstUserSocket.on(
+    firstUserSocket.once(
       TransportTopics.groupMessageSent,
       (data: GroupMessageInterface) => {
-        expect(data.groupId).toBe(groupId);
+        expect(data.groupId).toBe(firstGroupId);
         expect(data.senderId).toBe(secondUserId);
         expect(data.message).toBe(secondUserGroupMessage);
         resolveGroupMessageSentCb();
@@ -200,7 +199,7 @@ describe("E2E Tests", () => {
     );
     const groupMessageToBeSent: GroupMessageInterface = {
       message: secondUserGroupMessage,
-      groupId,
+      groupId: firstGroupId,
       senderId: secondUserId,
     };
     secondUserSocket.emit(
@@ -215,14 +214,74 @@ describe("E2E Tests", () => {
     const [groupRemovedPromise, resolveGroupRemovedCb] =
       getPromiseWithResolveCb("groupRemoved", 2000);
 
-    firstUserSocket.on(TransportTopics.groupRemoved, (removedGroupId) => {
-      expect(removedGroupId).toBe(groupId);
+    firstUserSocket.once(TransportTopics.groupRemoved, (removedGroupId) => {
+      expect(removedGroupId).toBe(firstGroupId);
       resolveGroupRemovedCb();
     });
 
-    firstUserSocket.emit(TransportTopics.removeGroup, groupId);
+    firstUserSocket.emit(TransportTopics.removeGroup, firstGroupId);
 
     await groupRemovedPromise;
+  });
+
+  test("messages can't be delivered in removed group", async () => {
+    const [groupMessageSentPromise, resolveGroupMessageSentCb] =
+      getPromiseWithResolveCb("groupMessageSent", 2000);
+
+    firstUserSocket.once(
+      TransportTopics.groupMessageSent,
+      (data: GroupMessageInterface) => {
+        if (firstGroupId === data.groupId) {
+          throw new Error("message was delivered in removed group");
+        }
+      },
+    );
+    const groupMessageToBeSent: GroupMessageInterface = {
+      message: secondUserGroupMessage,
+      groupId: firstGroupId,
+      senderId: secondUserId,
+    };
+    secondUserSocket.emit(
+      TransportTopics.sendGroupMessage,
+      groupMessageToBeSent,
+    );
+    setTimeout(() => {
+      resolveGroupMessageSentCb();
+    }, 1000);
+    await groupMessageSentPromise;
+  });
+
+  test("user can join already created group", async () => {
+    secondGroupId = await userSocketCreateGroup(firstUserSocket, [], 1000);
+
+    const userAddedToGroupPromise = new Promise((resolve, reject) => {
+      secondUserSocket.once(
+        TransportTopics.userJoinedGroup,
+        ({ groupId: joinedGroupId }: UserJoinGroupPayload) => {
+          expect(joinedGroupId).toBe(secondGroupId);
+          resolve(0);
+        },
+      );
+    });
+
+    secondUserSocket.emit(TransportTopics.joinGroup, secondGroupId);
+
+    await userAddedToGroupPromise;
+  });
+
+  test("user can leave group", (cb) => {
+    const expectedMessage = `user ${secondUserId} left the group`;
+
+    firstUserSocket.once(
+      TransportTopics.groupMessageSent,
+      ({ message, groupId }: GroupMessageInterface) => {
+        expect(message).toBe(expectedMessage);
+        expect(groupId).toBe(secondGroupId);
+        cb();
+      },
+    );
+
+    secondUserSocket.emit(TransportTopics.leaveGroup, secondGroupId);
   });
 
   test("users can be deleted", async () => {
@@ -252,4 +311,26 @@ function getPromiseWithResolveCb(promiseName: string, timeout: number) {
     };
   });
   return [promise, resolveCb];
+}
+
+function userSocketCreateGroup(
+  socket: Socket,
+  participantsId: string[],
+  timeout: number,
+): Promise<string> {
+  return new Promise((res, rej) => {
+    const timer = setTimeout(() => {
+      rej("group was not created in time");
+    }, timeout);
+    socket.once(TransportTopics.groupCreated, (createdGroupId) => {
+      clearTimeout(timer);
+      res(createdGroupId);
+    });
+
+    const createGroupData: CreateGroupDto = {
+      name: "just a new group",
+      participantsId,
+    };
+    socket.emit(TransportTopics.createGroup, createGroupData);
+  });
 }

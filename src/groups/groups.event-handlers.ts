@@ -8,7 +8,7 @@ export function registerGroupHandlers(
   socket: Socket,
   groupsController: GroupsController,
 ) {
-  socket.on("group.create.command", async (data: CreateGroupDto) => {
+  socket.on(TransportTopics.createGroup, async (data: CreateGroupDto) => {
     await groupsController.createGroup(socket, data);
   });
 
@@ -16,11 +16,11 @@ export function registerGroupHandlers(
     await groupsController.removeGroup(socket, groupId);
   });
 
-  socket.on("group.leave.command", async (groupId: string) => {
+  socket.on(TransportTopics.leaveGroup, async (groupId: string) => {
     await groupsController.leaveGroup(socket, groupId);
   });
 
-  socket.on("group.join.command", async (groupId: string) => {
+  socket.on(TransportTopics.joinGroup, async (groupId: string) => {
     await groupsController.joinGroup(socket, groupId);
   });
 
