@@ -79,6 +79,11 @@ export async function runApp() {
     console.log(`[server]: Server is running at http://localhost:${port}`);
   });
 
+  process.on("SIGTERM", async () => {
+    console.log("SIGTERM signal received: closing HTTP server");
+    await stopService();
+  });
+
   return stopService;
 
   async function stopService() {
@@ -92,6 +97,10 @@ export async function runApp() {
       });
     });
     console.log("io server closed");
+
+    await mongoose.connection.close();
+    console.log("db connection closed");
+    process.exit(0);
   }
 
   function registerHandlers(socket: Socket) {
