@@ -16,6 +16,11 @@ export function UsersRouter(
       body("password").isLength({ min: 3, max: 20 }),
       userController.createUser.bind(userController),
     )
+    .delete(
+      "/users/:userId",
+      getAuthMiddleware(authService),
+      userController.deleteUser.bind(userController),
+    )
     .get(
       "/users",
       getAuthMiddleware(authService),

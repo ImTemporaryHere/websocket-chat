@@ -2,6 +2,7 @@ import { GroupsRepository } from "./groups.repository";
 import { ICreateGroup } from "./interfaces/create-group.interface";
 import { Transport } from "../transports/transport";
 import { GroupMessageInterface } from "./interfaces/group-message.interface";
+import { TransportTopics } from "../transports/transport-topics";
 
 export class GroupsService {
   constructor(
@@ -10,6 +11,8 @@ export class GroupsService {
   ) {}
 
   async createGroup(params: ICreateGroup) {
+    params.participantsId.push(params.ownerId);
+
     const createdGroup = await this.groupsRepository.create(params);
 
     this.transport.createGroup({
@@ -17,15 +20,15 @@ export class GroupsService {
       participantsId: params.participantsId,
     });
 
-    this.transport.notify({
-      topic: "group.created.event",
+    this.transport.notifyUser({
+      topic: TransportTopics.groupCreated,
       userId: params.ownerId,
       message: createdGroup._id,
     });
 
     params.participantsId.forEach((participantId: string) => {
-      this.transport.notify({
-        topic: "user.added-to-group.event",
+      this.transport.notifyUser({
+        topic: TransportTopics.userAddedToGroup,
         userId: participantId,
         message: createdGroup._id.toString(),
       });
@@ -36,8 +39,8 @@ export class GroupsService {
     //todo : can add validation whether user owns group or not
     this.transport.removeGroup(groupId);
     await this.groupsRepository.remove(groupId);
-    this.transport.notify({
-      topic: "group.removed.event",
+    this.transport.notifyUser({
+      topic: TransportTopics.groupRemoved,
       userId: currentUserId,
       message: groupId,
     });
@@ -45,15 +48,20 @@ export class GroupsService {
 
   async leaveGroup(userId: string, groupId: string) {
     this.transport.leaveGroup(userId, groupId);
+    this.sendMessageToGroup({
+      groupId,
+      senderId: groupId,
+      message: `user ${userId} left the group`,
+    });
     await this.groupsRepository.leaveGroup(userId, groupId);
   }
 
   async joinGroup(userId: string, groupId: string) {
-    this.transport.joinGroup(userId, groupId);
+    this.transport.joinGroup({ userId, groupId });
     await this.groupsRepository.joinGroup(userId, groupId);
   }
 
-  async sendMessageToGroup(data: GroupMessageInterface) {
+  sendMessageToGroup(data: GroupMessageInterface) {
     this.transport.sendMessageToGroup(data);
     //use repository for updating group history
   }

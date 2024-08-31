@@ -7,5 +7,3 @@ COPY package*.json ./
 
 # Install dependencies into /app/node_modules
 RUN npm ci
-
-CMD command param1 param2

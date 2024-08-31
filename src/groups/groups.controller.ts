@@ -2,6 +2,7 @@ import { GroupsService } from "./groups.service";
 import { Socket } from "socket.io";
 import { CreateGroupDto } from "./dto/create-group.dto";
 import { SendGroupMessageDto } from "./dto/send-group-message.dto";
+import { TransportTopics } from "../transports/transport-topics";
 
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
@@ -54,7 +55,7 @@ export class GroupsController {
       });
     } catch (e: any) {
       console.error(e);
-      socket.emit("group.send-message.command", e.toString());
+      socket.emit(TransportTopics.sendGroupMessage, e.toString());
     }
   }
 }
