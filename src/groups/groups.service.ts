@@ -62,6 +62,7 @@ export class GroupsService {
   }
 
   sendMessageToGroup(data: GroupMessageInterface) {
+    console.log("sendMessageToGroup", data);
     this.transport.sendMessageToGroup(data);
     //use repository for updating group history
   }

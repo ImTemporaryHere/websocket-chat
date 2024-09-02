@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import { UserModel } from "../users/user.model";
 
 export interface Group {
+  _id?: string;
   name: string;
   participantsId: Schema.Types.ObjectId[];
   ownerId: Schema.Types.ObjectId;

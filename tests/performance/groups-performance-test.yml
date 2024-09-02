@@ -1,0 +1,79 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - name: 'create group'
+#      maxVusers: 1
+      duration: 3
+      arrivalRate: 60
+  processor: './my-functions.ts'  # External processor file for custom functions
+
+
+
+
+before:
+  flow:
+
+    - log: 'create  user'
+    - post:
+        beforeRequest: 'setUserData'
+        url: '/api/users'
+        json:
+          email: "{{ email }}"
+          password: "{{ password }}"
+        capture:
+          - json: '$.userId'
+            as: 'userId'
+          - json: '$.accessToken'
+            as: 'accessToken'
+    - log: 'created  user {{userId}}'
+
+
+after:
+  flow:
+    - log: 'drop database'
+    - function: 'dropDataBase'
+
+
+scenarios:
+  - name: "user create group and send messages"
+    engine: 'socketio'
+    socketio:
+      extraHeaders:
+        access_token: "{{accessToken}}"
+    flow:
+      - emit:
+          channel: 'group.create.command'
+          data: {"name": "just a new group", "participantsId": []}
+        response:
+          channel: 'group.created.event'
+          capture:
+            json: "$[0]"
+            as: "groupId"
+#      - log: "groupId={{groupId}}"
+#      - think: 10
+#      - function: 'setGroupIdInContextForUser'
+#      - log: 'created group id is {{ groupId }}'
+      - loop:
+        - emit:
+            channel: 'group.send-message.command'
+            data:
+              groupId: '{{ groupId }}'
+              message: 'group_message_from_user_{{ $loopCount }}'
+            response:
+              channel: 'group.message-sent.event'
+              expect:
+#                - jsonpath: "$.groupId"
+#                  equals: "{{ groupId }}"
+                - jsonpath: "$.message"
+                  equals: "group_message_from_user_{{ $loopCount }}"
+                - jsonpath: "$.senderId"
+                  equals: "{{ userId }}"
+              capture:
+                json: "$[0].senderId"
+                as: "res"
+        #      - log: "response={{res}}"
+        count: 100
+
+
+
+

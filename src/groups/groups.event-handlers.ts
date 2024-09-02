@@ -9,6 +9,7 @@ export function registerGroupHandlers(
   groupsController: GroupsController,
 ) {
   socket.on(TransportTopics.createGroup, async (data: CreateGroupDto) => {
+    console.log(TransportTopics.createGroup, data);
     await groupsController.createGroup(socket, data);
   });
 

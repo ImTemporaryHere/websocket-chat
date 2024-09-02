@@ -1,6 +1,6 @@
 import { GroupModel, Group } from "./group.model";
 import { ICreateGroup } from "./interfaces/create-group.interface";
-import mongoose from "mongoose";
+import mongoose, { HydratedDocument } from "mongoose";
 
 export class GroupsRepository {
   create(group: ICreateGroup) {
@@ -14,8 +14,12 @@ export class GroupsRepository {
     return newGroup.save();
   }
 
-  findOne(id: string) {
-    return GroupModel.findById(id).exec();
+  findOne(groupData: Partial<Group>) {
+    return GroupModel.findOne(groupData).exec();
+  }
+
+  findAll() {
+    return GroupModel.find({}).exec();
   }
 
   remove(groupId: string) {
