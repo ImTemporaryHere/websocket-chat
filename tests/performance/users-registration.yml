@@ -1,0 +1,39 @@
+config:
+  target: 'http://localhost'
+  tls:
+    rejectUnauthorized: false
+  phases:
+    - name: 'create group'
+#      maxVusers: 1
+      duration: 10
+      arrivalRate: 10
+  processor: './my-functions.ts'  # External processor file for custom functions
+
+
+
+
+after:
+  flow:
+    - log: 'drop database'
+    - function: 'dropDataBase'
+
+
+scenarios:
+  - name: "user registration"
+    flow:
+      - post:
+          beforeRequest: 'setUserData'
+          url: '/api/users'
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: '$.userId'
+              as: 'userId'
+            - json: '$.accessToken'
+              as: 'accessToken'
+
+
+
+
+#NODE_ENV=staging artillery run tests/performance/users-registration.yml

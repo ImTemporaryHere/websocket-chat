@@ -62,7 +62,7 @@ export async function testConnectToSocket({
   const socket = io(baseUrl, {
     reconnectionDelayMax: 10000,
     extraHeaders: {
-      access_token,
+      Authorization: access_token,
     },
   });
 

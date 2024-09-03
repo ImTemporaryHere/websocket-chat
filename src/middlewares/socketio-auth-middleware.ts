@@ -11,7 +11,7 @@ declare module "socket.io" {
 export const getAuthSocketMiddleware: (
   authService: AuthService,
 ) => IoMiddleware = (authService) => (socket, next) => {
-  const accessToken = socket.handshake.headers.access_token as string;
+  const accessToken = socket.handshake.headers.authorization as string;
   if (!accessToken) {
     return next(new Error("not authorized"));
   }

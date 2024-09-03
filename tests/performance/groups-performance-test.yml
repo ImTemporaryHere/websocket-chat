@@ -1,5 +1,7 @@
 config:
-  target: 'http://localhost:3000'
+  target: 'http://localhost'
+  tls:
+    rejectUnauthorized: false
   phases:
     - name: 'create group'
 #      maxVusers: 1
@@ -39,7 +41,7 @@ scenarios:
     engine: 'socketio'
     socketio:
       extraHeaders:
-        access_token: "{{accessToken}}"
+        Authorization: "{{accessToken}}"
     flow:
       - emit:
           channel: 'group.create.command'

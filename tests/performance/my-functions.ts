@@ -3,7 +3,7 @@ import { ActionFn, BeforeRequestFn } from "artillery";
 import { config } from "dotenv";
 import mongoose, { Schema } from "mongoose";
 
-config({ path: `envs/.env.${process.env.NODE_ENV}` });
+config({ path: `envs/test/.env.${process.env.NODE_ENV}` });
 
 export const setUserData: BeforeRequestFn = (
   requestParams,

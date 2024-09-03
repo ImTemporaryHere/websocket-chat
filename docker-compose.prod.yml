@@ -20,22 +20,27 @@ services:
       - db
     build:
       context: .
-      dockerfile: dev.Dockerfile
+      dockerfile: prod.Dockerfile
     environment:
       - DEV_PLATFORM=DOCKER
       - NODE_ENV=${NODE_ENV}
     volumes:
-      - ./src:/app/src
-      - node-modules:/app/node_modules
       - ./envs:/app/envs
-    command: npm run ${NPM_COMMAND}
+    command: node dist/src/index.js
 #    command: tail -f /dev/null
+    deploy:
+      mode: replicated
+      replicas: 8
+
+  nginx:
+    image: nginx:latest
     ports:
-      - "${APP_PORT}:3000"
-#    deploy:
-#      mode: replicated
-#      replicas: 3
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - backend
+
 
 volumes:
   db_data:
-  node-modules:

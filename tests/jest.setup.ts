@@ -1,8 +1,7 @@
 import { runApp } from "../src/app";
 import { config } from "dotenv";
-import mongoose from "mongoose";
 
-config({ path: `envs/.env.${process.env.NODE_ENV}` });
+config({ path: `envs/test/.env.${process.env.NODE_ENV}` });
 
 export let stopServiceCallback: () => Promise<void>;
 
