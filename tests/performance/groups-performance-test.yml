@@ -49,10 +49,6 @@ scenarios:
           capture:
             json: "$[0]"
             as: "groupId"
-#      - log: "groupId={{groupId}}"
-#      - think: 10
-#      - function: 'setGroupIdInContextForUser'
-#      - log: 'created group id is {{ groupId }}'
       - loop:
         - emit:
             channel: 'group.send-message.command'
@@ -71,7 +67,6 @@ scenarios:
               capture:
                 json: "$[0].senderId"
                 as: "res"
-        #      - log: "response={{res}}"
         count: 100
 
 
