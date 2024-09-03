@@ -31,7 +31,7 @@ services:
 #    command: tail -f /dev/null
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 3
       resources:
         limits:
           memory: 512m
