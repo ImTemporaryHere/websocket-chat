@@ -6,7 +6,7 @@ config:
     - name: 'create group'
 #      maxVusers: 1
       duration: 3
-      arrivalRate: 60
+      arrivalRate: 10
   processor: './my-functions.ts'  # External processor file for custom functions
 
 
