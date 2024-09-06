@@ -3,10 +3,13 @@ config:
   tls:
     rejectUnauthorized: false
   phases:
-    - name: 'phase 1'
+    - name: 'start phase'
+      duration: 2
+      arrivalRate: 30
+    - name: 'work phase'
       duration: 5
-      arrivalRate: 50
-      rampTo: 150
+      arrivalRate: 130
+#      rampTo: 1000
   processor: './my-functions.ts'  # External processor file for custom functions
 
 

@@ -13,6 +13,8 @@ import { GroupsController } from "./groups/groups.controller";
 import { GroupsService } from "./groups/groups.service";
 import { GroupsRepository } from "./groups/groups.repository";
 import { Server as IoServer, Socket } from "socket.io";
+import { createAdapter, RedisAdapter } from "socket.io-redis";
+import { Redis } from "ioredis";
 import { registerGroupHandlers } from "./groups/groups.event-handlers";
 import { UserSocketsMapper } from "./transports/sokets-mapper";
 import { getAuthSocketMiddleware } from "./middlewares/socketio-auth-middleware";
@@ -27,7 +29,17 @@ export async function runApp() {
   const app: Express = express();
   const port = process.env.PORT || 3000;
   const httpServer = createServer(app);
-  const io = new IoServer(httpServer);
+  const pubClient = new Redis({
+    host: process.env.REDIS_HOST as string,
+    port: Number(process.env.REDIS_PORT as string),
+  });
+  const subClient = pubClient.duplicate();
+
+  // await Promise.all([pubClient.connect(), subClient.connect()]);
+
+  const io = new IoServer(httpServer, {
+    adapter: createAdapter({ pubClient, subClient }),
+  });
 
   container.register("UsersRepository", UsersRepository);
   container.register("AuthService", AuthService);

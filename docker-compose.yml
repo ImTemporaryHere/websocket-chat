@@ -14,10 +14,26 @@ services:
     ports:
       - "${DB_PORT}:27017"
 
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s         # Time between running the check
+      timeout: 5s           # Time to wait for the check to complete
+      retries: 3            # How many times to retry the check
+      start_period: 10s     # How long to wait before starting checks
+    volumes:
+      - redis-data:/data
+
 
   backend:
     depends_on:
-      - db
+      db:
+        condition: service_started
+      redis:
+          condition: service_healthy
     build:
       context: .
       dockerfile: dev.Dockerfile
@@ -27,6 +43,7 @@ services:
     volumes:
       - ./src:/app/src
       - node-modules:/app/node_modules
+      - dev-files:/app/dev-files
       - ./envs:/app/envs
     command: npm run ${NPM_COMMAND}
 #    command: tail -f /dev/null
@@ -39,3 +56,5 @@ services:
 volumes:
   db_data:
   node-modules:
+  redis-data:
+  dev-files:

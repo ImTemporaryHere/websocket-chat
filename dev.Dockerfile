@@ -5,5 +5,9 @@ WORKDIR /app
 # Install app dependencies
 COPY package*.json tsconfig.json ./
 
-# Install dependencies into /app/node_modules
-RUN npm ci
+
+COPY entrypoint.dev.sh ./
+
+# Command to install dependencies if node_modules is empty
+ENTRYPOINT ["/app/entrypoint.dev.sh"]
+

@@ -1,4 +1,3 @@
-# Use root/example as user/password credentials
 version: '3.9'
 
 services:
@@ -16,9 +15,28 @@ services:
     networks:
       - my_network
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s         # Time between running the check
+      timeout: 5s           # Time to wait for the check to complete
+      retries: 3            # How many times to retry the check
+      start_period: 10s     # How long to wait before starting checks
+    volumes:
+      - redis-data:/data
+    networks:
+      - my_network
+
   backend:
     depends_on:
-      - db
+      db:
+        condition: 'service_started'
+      redis:
+          condition: service_healthy
     build:
       context: .
       dockerfile: prod.Dockerfile
@@ -54,45 +72,11 @@ services:
 
 volumes:
   db_data:
+  redis-data:
 networks:
   my_network:
     name: prod_network
 
 
-
-#
-#All VUs finished. Total time: 21 seconds
-#
-#  --------------------------------
-#  Summary report @ 02:25:21(+0300)
-#  --------------------------------
-#
-#errors.ETIMEDOUT: .............................................................. 46
-#http.codes.201: ................................................................ 54
-#http.downloaded_bytes: ......................................................... 12420
-#http.request_rate: ............................................................. 7/sec
-#http.requests: ................................................................. 100
-#http.response_time:
-#  min: ......................................................................... 1630
-#  max: ......................................................................... 9999
-#  mean: ........................................................................ 6011.2
-#  median: ...................................................................... 5944.6
-#  p95: ......................................................................... 9416.8
-#  p99: ......................................................................... 9801.2
-#http.responses: ................................................................ 54
-#vusers.completed: .............................................................. 54
-#vusers.created: ................................................................ 100
-#vusers.created_by_name.user registration: ...................................... 100
-#vusers.failed: ................................................................. 46
-#vusers.session_length:
-#  min: ......................................................................... 1668.4
-#  max: ......................................................................... 10003.9
-#  mean: ........................................................................ 6024.9
-#  median: ...................................................................... 5944.6
-#  p95: ......................................................................... 9416.8
-#  p99: ......................................................................... 9801.2
-#  / drop database
-
-#  $ NODE_ENV=staging artillery run tests/performance/groups-performance-test.yml
-
-#  docker-compose -f docker-compose.prod.yml --env-file=docker.env.stag up -d
+# docker-compose -f docker-compose.prod.yml --env-file=docker.env.stag up
+#NODE_ENV=staging NAME=single-node-redis npm run load-test

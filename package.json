@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/src/index.js",
-    "dev": "npm ci && nodemon --legacy-watch src/index.ts",
+    "dev": "nodemon --legacy-watch src/index.ts",
     "run-load-test": "cross-env-shell 'artillery run tests/performance/groups-performance-test.yml --output tests/performance/reports/\"$NAME\".json'",
     "format-test-results": "cross-env-shell 'artillery report tests/performance/reports/\"$NAME\".json --output tests/performance/reports/\"$NAME\".html' ",
     "load-test": "npm run run-load-test && npm run format-test-results"
@@ -22,9 +22,11 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-validator": "^7.2.0",
+    "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.2",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "socket.io-redis": "^6.1.1"
   },
   "devDependencies": {
     "@types/artillery": "^1.7.4",
