@@ -1,12 +1,12 @@
 config:
-  target: 'http://localhost'
+  target: 'http://127.0.0.1:80'
   tls:
     rejectUnauthorized: false
   phases:
-    - name: 'create group'
-#      maxVusers: 1
-      duration: 3
-      arrivalRate: 10
+    - name: 'phase 1'
+      duration: 5
+      arrivalRate: 50
+      rampTo: 150
   processor: './my-functions.ts'  # External processor file for custom functions
 
 
@@ -40,6 +40,7 @@ scenarios:
   - name: "user create group and send messages"
     engine: 'socketio'
     socketio:
+      transports: ['websocket']
       extraHeaders:
         Authorization: "{{accessToken}}"
     flow:
@@ -69,7 +70,7 @@ scenarios:
               capture:
                 json: "$[0].senderId"
                 as: "res"
-        count: 100
+        count: 2
 
 
 
