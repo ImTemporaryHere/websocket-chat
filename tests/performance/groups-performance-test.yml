@@ -3,13 +3,9 @@ config:
   tls:
     rejectUnauthorized: false
   phases:
-    - name: 'start phase'
-      duration: 2
-      arrivalRate: 30
     - name: 'work phase'
       duration: 5
-      arrivalRate: 130
-#      rampTo: 1000
+      arrivalRate: 120
   processor: './my-functions.ts'  # External processor file for custom functions
 
 
@@ -74,7 +70,7 @@ scenarios:
                 json: "$[0].senderId"
                 as: "res"
         count: 2
-
+      - think: 25
 
 
 

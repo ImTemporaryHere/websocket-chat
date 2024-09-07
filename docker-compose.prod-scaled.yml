@@ -61,7 +61,8 @@ services:
     volumes:
       - ./nginx/conf.d/scaled.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - backend
+      backend:
+          condition: 'service_started'
     networks:
       - my_network
 
