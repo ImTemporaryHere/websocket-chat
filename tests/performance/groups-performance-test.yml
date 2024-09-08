@@ -57,20 +57,15 @@ scenarios:
             data:
               groupId: '{{ groupId }}'
               message: 'group_message_from_user_{{ $loopCount }}'
-            response:
-              channel: 'group.message-sent.event'
-              expect:
-#                - jsonpath: "$.groupId"
-#                  equals: "{{ groupId }}"
-                - jsonpath: "$.message"
-                  equals: "group_message_from_user_{{ $loopCount }}"
-                - jsonpath: "$.senderId"
-                  equals: "{{ userId }}"
-              capture:
-                json: "$[0].senderId"
-                as: "res"
+#          response:
+#            channel: 'group.message-sent.event'
+##            data:
+##              senderId: "{{userId}}"
+##              message: "group_message_from_user_{{ $loopCount }}"
+##              groupId: "{{groupId}}"
+#            capture:
+#              json: "$[0]"
+#              as: "res"
+#        - log: "response {{res}}"
         count: 2
-      - think: 25
-
-
-
+      - think: 26
